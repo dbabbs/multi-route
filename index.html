@@ -1,0 +1,53 @@
+<!<!DOCTYPE html>
+<html>
+   <head>
+      <title>Multi-Point Routing</title>
+      <script src="http://lui.in.here.com/lui-all.min.js"></script>
+      <link rel="stylesheet" href="https://unpkg.com/leaflet@1.3.4/dist/leaflet.css" />
+      <script src="https://unpkg.com/leaflet@1.0.1/dist/leaflet.js"></script>
+      <link rel="stylesheet" href="index.css">
+   </head>
+
+   <body>
+      <lui-desktoplayer-theme>
+         <div id="sidebar">
+            <lui-contextchromelayer-theme>
+               <div id="header">
+                  <lui-logo>HERE</lui-logo>
+                  <span class="lui-h4">Multi-Point Routing</span>
+                  <lui-spinner></lui-spinner>
+               </div>
+            </lui-contextchromelayer-theme>
+            <div id="inner-sidebar">
+               <div class="form-group">
+                  <p class="lui-body">Destination 1</p>
+                  <lui-textfield  class="lui-small" >
+                     <input id="input-1" class="destinput" value="Seattle, WA" name="my-text" type="text" value="test" list="list-1">
+                  </lui-textfield>
+                  <datalist id="list-1"></datalist>
+               </div>
+               <div class="form-group">
+                  <p class="lui-body">Destination 2</p>
+                  <lui-textfield value="San Francisco, CA" class="lui-small destinput"></lui-textfield>
+               </div>
+               <div class="form-group">
+                  <p class="lui-body">Destination 3</p>
+                  <lui-textfield value="Spokane, WA" class="lui-small destinput"></lui-textfield>
+               </div>
+               <lui-button secondary class="lui-small" id="route">Route</lui-button>
+
+
+            </div>
+         </div>
+
+
+
+      </lui-desktoplayer-theme>
+
+
+      <div id="map"></div>
+      <script src="index.js"></script>
+   </body>
+
+
+</html>
