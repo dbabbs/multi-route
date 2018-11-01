@@ -31,6 +31,13 @@ html, body {
 #header lui-logo {
    padding-right: 15px;
 }
+#header span {
+  padding-right: 15px;
+}
+
+lui-spinner {
+  display: none;
+}
 
 #inner-sidebar {
    padding: 15px;

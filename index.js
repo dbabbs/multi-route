@@ -43,11 +43,12 @@ function makeRoutingUrl(rawDestinations) {
    for (let i = 0; i < rawDestinations.length; i++) {
       destinations += `&waypoint${i}=${rawDestinations[i].lat},${rawDestinations[i].lng}`
    }
-   return `https://route.api.here.com/routing/7.2/calculateroute.json?$${destinations}&mode=fastest%3Bcar&app_id=${hereCredentials.id}&app_code=${hereCredentials.code}`
+   return `https://route.api.here.com/routing/7.2/calculateroute.json?$${destinations}&mode=fastest%3Bcar&app_id=${hereCredentials.id}&app_code=${hereCredentials.code}&routeattributes=shape`
 }
 
 
 $('#route').onclick = () => {
+  $('lui-spinner').style.display = 'inline';
    const urls = $$('.destinput').map(x => x.value.makeGeoCodeUrl());
    console.log(urls);
 
@@ -72,6 +73,9 @@ $('#route').onclick = () => {
          //Routing Res
          fetch(routingReq).then(res => res.json()).then(routingRes => {
             console.log(routingRes)
+
+            const shape = routingRes.response.route[0].shape;
+            $('lui-spinner').style.display = 'none';
          })
 
 
