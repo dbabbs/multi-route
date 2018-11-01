@@ -3,52 +3,94 @@ const $$ = (qq) => Array.from(document.querySelectorAll(qq));
 
 
 const hereCredentials = {
-   id: 'rQV9iH0dFclorKNdx0nl',
-   code: 'Zml0JUDp0WXJXgxY7VFqAQ'
+   id: 'E2ZQ9D1JPucDy6AYr2LV',
+   code: 'JSkKINQgwC1NazM236X9GQ'
 }
 
-const hereTiles = L.tileLayer(`https://2.base.maps.api.here.com/maptile/2.1/maptile/newest/reduced.night/{z}/{x}/{y}/512/png8?app_id=${hereCredentials.id}&app_code=${hereCredentials.code}&ppi=320`);
+const hereTileUrl = `https://2.base.maps.api.here.com/maptile/2.1/maptile/newest/reduced.night/{z}/{x}/{y}/512/png8?app_id=${hereCredentials.id}&app_code=${hereCredentials.code}&ppi=320`;
+const examplePlaces = ['701 Pike St. Seattle', '954 E Union St. Seattle', '4703 21st Ave NE Seattle', '4699 SW Landert St. Seattle', '4825 27th Ave S Seattle']
 
 
 const map = L.map('map', {
    center: [47.608013, -122.335167],
    zoom: 11,
-   layers: [hereTiles],
+   layers: [L.tileLayer(hereTileUrl)],
    zoomControl: false
 });
 
-function makeAutoGeoCodeUrl(query) {
-   return `http://autocomplete.geocoder.api.here.com/6.2/suggest.json?app_id=${hereCredentials.id}&app_code=${hereCredentials.code}&query=${query}&beginHighlight=<b>&endHighlight=</b>     `
+let rowIndex = 0;
+
+for (let i = 0; i < 3; i++) {
+   makeInput(i)
+}
+
+function makeInput(index) {
+   /*
+   <div class="form-group">
+      <p class="lui-body">Destination 1</p>
+      <lui-textfield  class="lui-small" >
+         <input id="input-1" class="destinput" value="Seattle, WA" name="my-text" type="text" value="test" list="list-1">
+      </lui-textfield>
+      <datalist id="list-1"></datalist>
+   </div>
+   */
+   let examplePlace = examplePlaces[index];
+   if (examplePlaces.length > index) {
+      examplePlace = '';
+   }
+   let title = `Destination ${index}`;
+   if (index == 0) {
+      title = 'Origin'
+   }
+
+
+   const formInput = document.createElement('div');
+   formInput.classList.add('form-group');
+   formInput.innerHTML = `
+      <p class="lui-body">${title}</p>
+      <lui-textfield  class="lui-small" >
+         <input id="input-${index}" class="destinput" value="${examplePlace}" name="my-text" type="text" value="test" list="list-${index}">
+      </lui-textfield>
+      <datalist id="list-${index}"></datalist>`
+   rowIndex++;
+   $('.inputs').appendChild(formInput)
 }
 
 Object.assign(String.prototype, {
    makeGeoCodeUrl() {
       return `https://geocoder.api.here.com/6.2/geocode.json?app_id=${hereCredentials.id}&app_code=${hereCredentials.code}&searchtext=${this}`
+   },
+   makeAutoGeoCodeUrl() {
+      return `http://autocomplete.geocoder.api.here.com/6.2/suggest.json?app_id=${hereCredentials.id}&app_code=${hereCredentials.code}&query=${this}&beginHighlight=<b>&endHighlight=</b>     `
    }
-
-
 });
 
-function makeWaypointSequenceUrl(rawDestinations) {
-   const start = `start=${rawDestinations[0].Latitude},${rawDestinations[0].Longitude}`;
-   let destinations = '';
-   for (let i = 1; i < rawDestinations.length; i++) {
-      destinations += `&destination${i}=${rawDestinations[i].Latitude},${rawDestinations[i].Longitude}`
+Object.assign(Array.prototype, {
+   makeWaypointSequenceUrl() {
+      const start = `start=${this[0].Latitude},${this[0].Longitude}`;
+      let destinations = '';
+      for (let i = 1; i < this.length; i++) {
+         destinations += `&destination${i}=${this[i].Latitude},${this[i].Longitude}`
+      }
+      return `https://wse.api.here.com/2/findsequence.json?${start}${destinations}&improveFor=time&mode=fastest%3Bcar&app_id=${hereCredentials.id}&app_code=${hereCredentials.code}`
+   },
+   makeRoutingUrl() {
+      let destinations = '';
+      for (let i = 0; i < this.length; i++) {
+         destinations += `&waypoint${i}=${this[i].lat},${this[i].lng}`
+      }
+      return `https://route.api.here.com/routing/7.2/calculateroute.json?$${destinations}&mode=fastest%3Bcar&app_id=${hereCredentials.id}&app_code=${hereCredentials.code}&routeattributes=shape`
    }
-   return `https://wse.api.here.com/2/findsequence.json?${start}${destinations}&improveFor=time&mode=fastest%3Bcar&app_id=${hereCredentials.id}&app_code=${hereCredentials.code}`
+});
+$('#new-route').onclick = () => {
+   makeInput(rowIndex)
 }
-
-function makeRoutingUrl(rawDestinations) {
-   let destinations = '';
-   for (let i = 0; i < rawDestinations.length; i++) {
-      destinations += `&waypoint${i}=${rawDestinations[i].lat},${rawDestinations[i].lng}`
-   }
-   return `https://route.api.here.com/routing/7.2/calculateroute.json?$${destinations}&mode=fastest%3Bcar&app_id=${hereCredentials.id}&app_code=${hereCredentials.code}&routeattributes=shape`
-}
-
 
 $('#route').onclick = () => {
+
+   clearMap();
   $('lui-spinner').style.display = 'inline';
+
    const urls = $$('.destinput').map(x => x.value.makeGeoCodeUrl());
    console.log(urls);
 
@@ -59,7 +101,7 @@ $('#route').onclick = () => {
    )).then(responses => {
       // console.log(responses)
       const coordinates = responses.map(x => x.Response.View[0].Result[0].Location.NavigationPosition[0]);
-      const waypointReq =  makeWaypointSequenceUrl(coordinates);
+      const waypointReq =  coordinates.makeWaypointSequenceUrl();
 
 
       //Calculate Waypoint optimization
@@ -68,13 +110,24 @@ $('#route').onclick = () => {
          console.log(waypoints);
          const time = waypointRes.results[0].time;
 
-         const routingReq = makeRoutingUrl(waypointRes.results[0].waypoints);
+         const routingReq = waypointRes.results[0].waypoints.makeRoutingUrl();
 
          //Routing Res
          fetch(routingReq).then(res => res.json()).then(routingRes => {
             console.log(routingRes)
 
-            const shape = routingRes.response.route[0].shape;
+            const shape = routingRes.response.route[0].shape.map(x => x.split(','));
+            const polyline = L.polyline(shape, {color: '#2DD5C9', opacity: '0.7'}).addTo(map).snakeIn();
+
+            const routeWaypoints = routingRes.response.route[0].waypoint;
+            console.log(routeWaypoints)
+            for (let i = 0; i < routeWaypoints.length; i++) {
+               const loc = [routeWaypoints[i].mappedPosition.latitude, routeWaypoints[i].mappedPosition.longitude];
+               const marker = L.marker(loc).addTo(map)
+            }
+
+
+
             $('lui-spinner').style.display = 'none';
          })
 
@@ -83,12 +136,12 @@ $('#route').onclick = () => {
    })
 }
 
-let inputs = $$('.destinput');
+const inputs = $$('.destinput');
 // inputs.forEach((input) => {
 //    input.oninput = () => {
 //       const value = input.value.split(' ').join('+');
 //       const id = input.id.split('-')[1]
-//       fetch(makeAutoGeoCodeUrl(value)).then(res => res.json()).then(res => {
+//       fetch(value.makeAutoGeoCodeUrl()).then(res => res.json()).then(res => {
 //          const suggestions = res.suggestions;
 //          console.log(suggestions)
 //          input.parentNode.nextSibling.nextSibling.innerHTML = '';
@@ -102,3 +155,11 @@ let inputs = $$('.destinput');
 //       })
 //    }
 // })
+
+function clearMap() {
+   map.eachLayer((layer) => {
+      if (!layer.hasOwnProperty('id') && layer._url != hereTileUrl) {
+         map.removeLayer(layer);
+      }
+   });
+}
