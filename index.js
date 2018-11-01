@@ -35,7 +35,7 @@ function makeInput(index) {
    </div>
    */
    let examplePlace = examplePlaces[index];
-   if (examplePlaces.length > index) {
+   if (index >= examplePlaces.length) {
       examplePlace = '';
    }
    let title = `Destination ${index}`;
@@ -47,7 +47,7 @@ function makeInput(index) {
    const formInput = document.createElement('div');
    formInput.classList.add('form-group');
    formInput.innerHTML = `
-      <p class="lui-body">${title}</p>
+      <p class="lui-body form-title">${title}</p>
       <lui-textfield  class="lui-small" >
          <input id="input-${index}" class="destinput" value="${examplePlace}" name="my-text" type="text" value="test" list="list-${index}">
       </lui-textfield>
@@ -91,7 +91,9 @@ $('#route').onclick = () => {
    clearMap();
   $('lui-spinner').style.display = 'inline';
 
-   const urls = $$('.destinput').map(x => x.value.makeGeoCodeUrl());
+   const urls = $$('.destinput').map(x => x.value).filter(x => x != '').map(x => x.makeGeoCodeUrl());
+
+   //
    console.log(urls);
 
    //Geocode the responses
@@ -117,7 +119,7 @@ $('#route').onclick = () => {
             console.log(routingRes)
 
             const shape = routingRes.response.route[0].shape.map(x => x.split(','));
-            const polyline = L.polyline(shape, {color: '#2DD5C9', opacity: '0.7'}).addTo(map).snakeIn();
+            const polyline = L.polyline(shape, {color: '#2DD5C9'}).addTo(map).snakeIn();
 
             const routeWaypoints = routingRes.response.route[0].waypoint;
             console.log(routeWaypoints)
