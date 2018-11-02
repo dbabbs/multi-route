@@ -52,6 +52,8 @@ lui-spinner {
 
 #inner-sidebar {
    padding: 0 15px;
+   overflow-y: auto;
+   height: calc(100% - 80px);
 }
 
 .form-group {
@@ -66,4 +68,3 @@ lui-spinner {
 .lui-body {
    font-size: 14px;
 }
- 
