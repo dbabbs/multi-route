@@ -89,17 +89,14 @@ $('#new-route').onclick = () => {
 $('#route').onclick = () => {
 
    clearMap();
-  $('lui-spinner').style.display = 'inline';
+   $('lui-spinner').style.display = 'inline';
+   $('#route-info-container').innerHTML = '';
 
    const urls = $$('.destinput').map(x => x.value).filter(x => x != '').map(x => x.makeGeoCodeUrl());
-
-   //
-   console.log(urls);
 
    //Geocode the responses
    Promise.all(urls.map(url =>
       fetch(url).then(resp => resp.json())
-
    )).then(responses => {
       // console.log(responses)
       const coordinates = responses.map(x => x.Response.View[0].Result[0].Location.NavigationPosition[0]);
@@ -122,10 +119,17 @@ $('#route').onclick = () => {
             const polyline = L.polyline(shape, {color: '#2DD5C9'}).addTo(map).snakeIn();
 
             const routeWaypoints = routingRes.response.route[0].waypoint;
+
             console.log(routeWaypoints)
+            console.log(routingRes.response.route[0])
             for (let i = 0; i < routeWaypoints.length; i++) {
                const loc = [routeWaypoints[i].mappedPosition.latitude, routeWaypoints[i].mappedPosition.longitude];
                const marker = L.marker(loc).addTo(map)
+
+               const routeInfo = document.createElement('div');
+               routeInfo.classList.add('lui-body')
+               routeInfo.innerText = `Stop ${i}: ${routeWaypoints[i].label}`
+               $('#route-info-container').appendChild(routeInfo)
             }
 
 
